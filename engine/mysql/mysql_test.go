@@ -1,4 +1,4 @@
-package easy_orm
+package mysql
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 	"easy-orm/tests/prepare"
 )
 
-var TestMysqlEngine *EasyOrmEngine
+var TestMysqlEngine *EngineForMysql
 
 func TestEasyOrmEngine_Insert(t *testing.T) {
 	var user = prepare.User{
@@ -92,7 +92,7 @@ func TestOriginalSql(t *testing.T) {
 }
 
 func TestMain(m *testing.M) {
-	engine, err := NewEngine(MysqlDriver, "root", "hcwnbs", "localhost:3306", "ut-test")
+	engine, err := NewMySqlEngine("mysql", "root", "hcwnbs", "localhost:3306", "ut-test")
 	if err != nil {
 		fmt.Println("prepare for mysql engine failed, error:", err)
 		os.Exit(1)
