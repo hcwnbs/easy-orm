@@ -1,22 +1,18 @@
-package easy_orm
+package mysql
 
 import (
 	"database/sql"
 	"fmt"
 	"reflect"
 	"strings"
-
-	_ "github.com/go-sql-driver/mysql"
 )
-
-const MysqlDriver = "mysql"
 
 type Table interface {
 	TableName() string
 }
 
-// EasyOrmEngine core engine
-type EasyOrmEngine struct {
+// EngineForMysql EngineForMysql for mysql
+type EngineForMysql struct {
 	// original sql db
 	Db *sql.DB
 	Tx *sql.Tx
@@ -26,35 +22,31 @@ type EasyOrmEngine struct {
 	Exec      []interface{}
 }
 
-func NewEngine(driverName, useName, password, address, dbName string) (*EasyOrmEngine, error) {
-	switch driverName {
-	case MysqlDriver:
-		dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8&timeout=5s&readTimeout=6s", useName, password, address, dbName)
-		db, err := sql.Open(MysqlDriver, dsn)
-		if err != nil {
-			return nil, err
-			}
-
-		//Todo 最大连接数等配置
-
-		return &EasyOrmEngine{Db: db}, nil
-	default:
-		return nil, fmt.Errorf("the driver %s is not support", driverName)
+func NewMySqlEngine(driverName, useName, password, address, dbName string) (*EngineForMysql, error) {
+	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8&timeout=5s&readTimeout=6s", useName, password, address, dbName)
+	db, err := sql.Open(driverName, dsn)
+	if err != nil {
+		return nil, err
 	}
+
+	//Todo 最大连接数等配置
+
+	return &EngineForMysql{Db: db}, nil
 }
 
+
 // Table 设置表名
-func (e *EasyOrmEngine) Table(tableName string) *EasyOrmEngine {
+func (e *EngineForMysql) Table(tableName string) *EngineForMysql {
 	e.TableName = tableName
 	return e
 }
 
 // GetTable 获取表名
-func (e *EasyOrmEngine) GetTable() string {
+func (e *EngineForMysql) GetTable() string {
 	return e.TableName
 }
 
-func (e *EasyOrmEngine) Insert(data interface{}) error {
+func (e *EngineForMysql) Insert(data interface{}) error {
 	t := reflect.TypeOf(data)
 	v := reflect.ValueOf(data)
 	if t.Kind() == reflect.Ptr {
@@ -108,7 +100,7 @@ func (e *EasyOrmEngine) Insert(data interface{}) error {
 	return e.exec()
 }
 
-func (e *EasyOrmEngine) exec() error {
+func (e *EngineForMysql) exec() error {
 	stmt, err := e.Db.Prepare(e.Prepare)
 	if err != nil {
 		return err
@@ -121,12 +113,8 @@ func (e *EasyOrmEngine) exec() error {
 	return nil
 }
 
-func (e *EasyOrmEngine) resetEngine() {
+func (e *EngineForMysql) resetEngine() {
 	e.TableName = ""
 	e.Prepare = ""
 	e.Exec = []interface{}{}
 }
-
-
-
-
